@@ -1,0 +1,5 @@
+html { background: #cccccc; }
+table { border: 1px solid #000000; background: #eeeeee; }
+th { text-align: left; padding: 5px; }
+td { padding: 5px; }
+.head { text-align: center; background: #b0b0ff; padding: 2px; }

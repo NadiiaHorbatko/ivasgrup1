@@ -1,0 +1,71 @@
+<?php
+include('_config.php');
+session_start();
+
+$error = [];  // Инициализация массива ошибок
+$good = false;
+
+if (!empty($_POST)) {
+    if (empty($_POST['full_name'])) $error[] = 'Вы забыли указать Ф.И.О.';
+    if (!isset($_POST['sex']) || intval($_POST['sex']) > 1) $error[] = 'Вы что, какого-то неопределенного пола?';
+    if (empty($_POST['birthday']) || !preg_match('/^[0-9]{4}$/', $_POST['birthday'])) $error[] = 'Некорректный год рождения';
+    if (!isset($_POST['status']) || intval($_POST['status']) > count($_m_status) - 1) $error[] = 'Определитесь, пожалуйста, с вашим семейным положением';
+    if (!isset($_POST['education']) || intval($_POST['education']) > count($_education) - 1) $error[] = 'Вы хоть где-то учились?';
+    if (!isset($_POST['experience']) || intval($_POST['experience']) > count($_experience) - 1) $error[] = 'Лентяйство - это плохо!';
+    if (!isset($_POST['salary']) || intval($_POST['salary']) > count($_salary)) $error[] = 'Вам что, деньги не нужны?';
+
+    if (empty($error)) {
+        $lang = isset($_POST['lang']) ? 1 : 0;
+        $conviction = isset($_POST['conviction']) ? 1 : 0;
+        $stmt = $mysqli->prepare("INSERT INTO candidats (full_name, sex, birthday, status, education, experience, salary, lang, conviction, vac, contact) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("siiiiiiiisi",
+            $_POST['full_name'],
+            $_POST['sex'],
+            $_POST['birthday'],
+            $_POST['status'],
+            $_POST['education'],
+            $_POST['experience'],
+            $_POST['salary'],
+            $lang,
+            $conviction,
+            $_POST['vac'],
+            $_POST['contact']
+        );
+        $stmt->execute();
+        $stmt->close();
+        $good = true;
+    }
+}
+?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Подача анкеты для приема на работу в <?php echo htmlspecialchars($_orgname); ?></title>
+    <style type="text/css">
+        html { background: #dddddd; margin: 0; padding: 0; }
+        body { margin: 0px auto; margin-bottom: 10px; padding: 0px; width: 902px; background: #b0b0ff; border: 4px solid #bbbbbb; }
+        h1 { margin-bottom: 25px; color: #2f2f2f; font: bold 22px Times; text-align: center; }
+        table { border: 2px solid #555555; background: #eeeeee; }
+        th { text-align: left; }
+        input, select, textarea { padding: 2px 5px; }
+        select { width: 100%; }
+        .md { padding-bottom: 40px; border: 1px solid #888888; }
+    </style>
+</head>
+<body>
+<div class="md">
+    <img src="head.jpg" alt="Header Image" />
+    <h1>Подача анкеты для приема на работу в <?php echo htmlspecialchars($_orgname); ?></h1>
+    <?php if ($good) {
+        echo '<center><b>Спасибо, ваша анкета принята на рассмотрение.</b></center>';
+    } else {
+        if (!empty($error)) {
+            echo '<table align="center" cellpadding="10" style="margin-bottom: 25px; border: 1px solid red;"><tr><th>Во время заполнения анкеты были допущены ошибки:</th></tr><tr><td>' . implode('<br/>', $error) . '</td></tr></table>';
+        }
+        include('form.php');  // Выносим форму в отдельный файл для лучшей читаемости
+    } ?>
+</div>
+</body>
+</html>
+
